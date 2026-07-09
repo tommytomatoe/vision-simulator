@@ -1,24 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
-import { VisionRenderer, RenderMode } from './render/VisionRenderer';
+import { VisionRenderer } from './render/VisionRenderer';
+import type { RenderMode } from './render/VisionRenderer';
 import { selectedEyes } from './engine/selectedEyes';
 import { SCENES } from './sources/scenes';
-import { startCamera, CameraHandle } from './sources/camera';
+import { startCamera } from './sources/camera';
+import type { CameraHandle } from './sources/camera';
 import { TOMMY_RX } from './optics/presets';
 import { DEFAULT_BLUR_GAIN } from './optics/blur';
 import { parseGainParam } from './ui/parseGainParam';
-import { Prescription, EyeSelection } from './optics/types';
-import { SourceKind } from './ui/types';
+import type { Prescription, EyeSelection } from './optics/types';
+import type { SourceKind } from './ui/types';
 import { useLatestRef } from './ui/useLatestRef';
 import { fetchPhotoPool } from './sources/openverse';
 import type { Photo } from './sources/openverse';
 import { loadImage } from './sources/loadImage';
-import { SourceSwitcher } from './ui/SourceSwitcher';
-import { EyeToggle } from './ui/EyeToggle';
 import { AttributionChip } from './ui/AttributionChip';
 import { Toast } from './ui/Toast';
 import { CorrectionControls } from './ui/CorrectionControls';
 import { WipeHandle } from './ui/WipeHandle';
-import { RxPanel } from './ui/RxPanel';
+import { SourceChip } from './ui/SourceChip';
+import { IconButton } from './ui/IconButton';
+import { NextButton } from './ui/NextButton';
+import { SettingsSheet } from './ui/SettingsSheet';
+import { SettingsIcon } from './ui/icons';
 
 interface SourceFrame {
   el: TexImageSource;
@@ -36,16 +40,15 @@ export function App() {
   const [webglError, setWebglError] = useState(false);
   const [rx, setRx] = useState<Prescription>(TOMMY_RX);
   const [selection, setSelection] = useState<EyeSelection>('both');
-  const [mode, setMode] = useState<RenderMode>('blurred');
+  const [mode, setMode] = useState<RenderMode>('sharp');
   const [wipe, setWipe] = useState(0.5);
-  // Fixed calibration knob (no UI). `?gain=` overrides it for calibration/QA.
   const [gain] = useState(() => parseGainParam(window.location.search) ?? DEFAULT_BLUR_GAIN);
   const [kind, setKind] = useState<SourceKind>('scene');
   const [sceneId, setSceneId] = useState(SCENES[0].id);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
-  const [rxOpen, setRxOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const rxRef = useLatestRef(rx);
   const selRef = useLatestRef(selection);
@@ -95,9 +98,7 @@ export function App() {
     };
   }, [kind]);
 
-  // load a mixed, shuffled pool of photos (drawn from several random
-  // categories) when entering photo mode or when the pool empties, so "Next"
-  // moves through varied photos in random order rather than one category
+  // load a mixed, shuffled photo pool when entering photo mode or when it empties
   useEffect(() => {
     if (kind !== 'photo') return;
     if (photos.length > 0) return;
@@ -149,9 +150,6 @@ export function App() {
     try {
       renderer = new VisionRenderer(canvas);
     } catch (err) {
-      // Surface the real reason — the notice below is generic, but the
-      // console should say whether WebGL2 was truly absent or the renderer
-      // failed to initialize for another reason.
       console.error('VisionRenderer init failed:', err);
       setWebglError(true);
       return;
@@ -172,7 +170,6 @@ export function App() {
       try {
         const src = sourceRef.current;
         if (src && src.w > 0 && src.h > 0) {
-          // keep camera dimensions fresh once metadata loads
           if (cameraRef.current && src.el === cameraRef.current.video) {
             src.w = cameraRef.current.video.videoWidth || src.w;
             src.h = cameraRef.current.video.videoHeight || src.h;
@@ -200,8 +197,9 @@ export function App() {
   }, [rxRef, selRef, modeRef, wipeRef, gainRef]);
 
   const currentPhoto = kind === 'photo' ? photos[photoIndex] : undefined;
+  const sceneLabel = SCENES.find((s) => s.id === sceneId)?.label ?? 'Scenes';
   const shuffle = () => {
-    if (photoIndex + 1 >= photos.length) setPhotos([]); // triggers a fresh fetch
+    if (photoIndex + 1 >= photos.length) setPhotos([]);
     else setPhotoIndex((i) => i + 1);
   };
 
@@ -218,29 +216,39 @@ export function App() {
     <div className="app">
       <canvas ref={canvasRef} className="stage" data-testid="stage" />
       {mode === 'wipe' && <WipeHandle value={wipe} onChange={setWipe} />}
-      {currentPhoto && <AttributionChip photo={currentPhoto} />}
-      <Toast message={toast} />
-      <div className="controls">
-        <SourceSwitcher
-          kind={kind}
-          onKind={setKind}
-          sceneId={sceneId}
-          onScene={setSceneId}
-          onShuffle={shuffle}
-        />
-        <div className="row">
-          <EyeToggle value={selection} onChange={setSelection} />
-          {selection === 'both' && (
-            <span className="hint" data-testid="both-hint">
-              “Both” is an approximate blend of the two eyes
-            </span>
-          )}
-        </div>
-        <div className="row">
-          <CorrectionControls mode={mode} onMode={setMode} />
-        </div>
-        <RxPanel rx={rx} onRx={setRx} open={rxOpen} onToggle={() => setRxOpen((o) => !o)} />
+
+      <div className="chrome-top">
+        <SourceChip kind={kind} sceneLabel={sceneLabel} onOpen={() => setSettingsOpen(true)} />
+        <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
+          <SettingsIcon />
+        </IconButton>
       </div>
+
+      {currentPhoto && <AttributionChip photo={currentPhoto} />}
+
+      <div className="chrome-bottom">
+        <CorrectionControls mode={mode} onMode={setMode} />
+      </div>
+      {kind === 'photo' && (
+        <div className="next-slot">
+          <NextButton onNext={shuffle} />
+        </div>
+      )}
+
+      <Toast message={toast} />
+
+      <SettingsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        kind={kind}
+        onKind={setKind}
+        sceneId={sceneId}
+        onScene={setSceneId}
+        selection={selection}
+        onSelection={setSelection}
+        rx={rx}
+        onRx={setRx}
+      />
     </div>
   );
 }

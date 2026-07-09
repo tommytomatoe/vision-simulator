@@ -172,3 +172,49 @@ input:focus-visible {
   .sheet { animation: none; }
   .expander .chev { transition: none; }
 }
+
+/* --- floating chrome placement --- */
+.chrome-top {
+  position: absolute; z-index: 4;
+  top: calc(env(safe-area-inset-top) + 14px); left: 14px; right: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.chrome-bottom {
+  position: absolute; z-index: 4;
+  left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 20px);
+  display: flex; justify-content: center;
+}
+.next-slot {
+  position: absolute; z-index: 4;
+  right: 16px; bottom: calc(env(safe-area-inset-bottom) + 18px);
+}
+
+/* --- attribution caption --- */
+.caption {
+  position: absolute; z-index: 4;
+  left: 16px; right: 70px; bottom: calc(env(safe-area-inset-bottom) + 78px);
+  color: #fff; font-size: 0.76rem; line-height: 1.3;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+.caption .who { font-weight: 700; }
+.caption a { color: #fff; text-decoration: underline; }
+
+/* --- toast --- */
+.toast {
+  position: absolute; z-index: 30;
+  left: 50%; transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom) + 84px);
+  background: var(--espresso); color: #fff;
+  padding: 10px 16px; border-radius: 999px; font-size: 0.8rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+}
+
+/* --- compare wipe handle --- */
+.wipe-track { position: absolute; inset: 0; z-index: 3; touch-action: none; }
+.wipe-handle { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.15); }
+.wipe-handle::after {
+  content: '‹ ›'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: #fff; color: var(--espresso); font-weight: 700;
+  width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
