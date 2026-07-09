@@ -177,6 +177,25 @@ export class VisionRenderer {
   }
 
   dispose(): void {
-    this.gl.getExtension('WEBGL_lose_context')?.loseContext();
+    // Free the GL objects this renderer created, but do NOT call
+    // WEBGL_lose_context.loseContext(): a lost context permanently poisons
+    // the canvas, and getContext('webgl2') keeps returning that same lost
+    // context. Under React StrictMode the mount effect runs
+    // mount → cleanup → mount on the SAME canvas, so losing the context
+    // here made the second mount fail to compile shaders and surface a
+    // false "WebGL2 not supported" notice. The browser reclaims the
+    // context when the canvas is garbage-collected on real unmount.
+    const gl = this.gl;
+    gl.deleteBuffer(this.quad);
+    gl.deleteProgram(this.copyProg);
+    gl.deleteProgram(this.blurProg);
+    gl.deleteProgram(this.compProg);
+    gl.deleteTexture(this.srcTex);
+    for (const fb of [this.sharp, this.work0, ...this.results]) {
+      if (fb) {
+        gl.deleteFramebuffer(fb.fbo);
+        gl.deleteTexture(fb.tex);
+      }
+    }
   }
 }

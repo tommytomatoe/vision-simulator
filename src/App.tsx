@@ -143,7 +143,11 @@ export function App() {
     let renderer: VisionRenderer;
     try {
       renderer = new VisionRenderer(canvas);
-    } catch {
+    } catch (err) {
+      // Surface the real reason — the notice below is generic, but the
+      // console should say whether WebGL2 was truly absent or the renderer
+      // failed to initialize for another reason.
+      console.error('VisionRenderer init failed:', err);
       setWebglError(true);
       return;
     }
