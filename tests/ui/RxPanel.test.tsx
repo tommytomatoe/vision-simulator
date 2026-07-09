@@ -8,7 +8,7 @@ describe('RxPanel', () => {
   it('applies a preset when its button is clicked', async () => {
     const onRx = vi.fn();
     render(<RxPanel rx={TOMMY_RX} onRx={onRx} open onToggle={() => {}} />);
-    await userEvent.click(screen.getByRole('button', { name: /^Mild$/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^20\/40$/ }));
     expect(onRx).toHaveBeenCalledTimes(1);
     const applied = onRx.mock.calls[0][0];
     expect(applied.right.sph).toBe(-1.0);
