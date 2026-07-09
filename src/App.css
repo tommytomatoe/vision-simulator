@@ -56,6 +56,7 @@ body {
   bottom: 8rem; background: #1b2130; border: 1px solid #2a3140;
   padding: 0.6rem 1rem; border-radius: 0.5rem; font-size: 0.85rem;
 }
+.wipe-track { touch-action: none; }
 .wipe-handle {
   position: absolute; top: 0; bottom: 0; width: 2px; background: #fff;
   cursor: ew-resize; touch-action: none;

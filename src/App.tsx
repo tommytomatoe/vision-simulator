@@ -14,6 +14,8 @@ import { SourceSwitcher } from './ui/SourceSwitcher';
 import { EyeToggle } from './ui/EyeToggle';
 import { AttributionChip } from './ui/AttributionChip';
 import { Toast } from './ui/Toast';
+import { CorrectionControls } from './ui/CorrectionControls';
+import { WipeHandle } from './ui/WipeHandle';
 
 interface SourceFrame {
   el: TexImageSource;
@@ -200,6 +202,7 @@ export function App() {
   return (
     <div className="app">
       <canvas ref={canvasRef} className="stage" data-testid="stage" />
+      {mode === 'wipe' && <WipeHandle value={wipe} onChange={setWipe} />}
       {currentPhoto && <AttributionChip photo={currentPhoto} />}
       <Toast message={toast} />
       <div className="controls">
@@ -217,6 +220,9 @@ export function App() {
               “Both” is an approximate blend of the two eyes
             </span>
           )}
+        </div>
+        <div className="row">
+          <CorrectionControls mode={mode} onMode={setMode} />
         </div>
       </div>
     </div>
