@@ -16,4 +16,9 @@ describe('SourceChip', () => {
     render(<SourceChip kind="scene" sceneLabel="Astigmatism dial" onOpen={() => {}} />);
     expect(screen.getByRole('button', { name: /astigmatism dial/i })).toBeInTheDocument();
   });
+
+  it('exposes aria-expanded when the expanded prop is passed', () => {
+    render(<SourceChip kind="scene" sceneLabel="Astigmatism dial" onOpen={() => {}} expanded={true} />);
+    expect(screen.getByRole('button', { name: /astigmatism dial/i })).toHaveAttribute('aria-expanded', 'true');
+  });
 });

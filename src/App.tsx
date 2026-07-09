@@ -218,15 +218,15 @@ export function App() {
       {mode === 'wipe' && <WipeHandle value={wipe} onChange={setWipe} />}
 
       <div className="chrome-top">
-        <SourceChip kind={kind} sceneLabel={sceneLabel} onOpen={() => setSettingsOpen(true)} />
-        <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
+        <SourceChip kind={kind} sceneLabel={sceneLabel} onOpen={() => setSettingsOpen(true)} expanded={settingsOpen} />
+        <IconButton label="Settings" onClick={() => setSettingsOpen(true)} expanded={settingsOpen} hasPopup>
           <SettingsIcon />
         </IconButton>
       </div>
 
       {currentPhoto && <AttributionChip photo={currentPhoto} />}
 
-      <div className="chrome-bottom">
+      <div className={kind === 'photo' ? 'chrome-bottom has-next' : 'chrome-bottom'}>
         <CorrectionControls mode={mode} onMode={setMode} />
       </div>
       {kind === 'photo' && (

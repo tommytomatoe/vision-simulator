@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { SourceKind } from './types';
 import type { EyeSelection, Prescription } from '../optics/types';
@@ -35,6 +36,15 @@ export function SettingsSheet({
   rx: Prescription;
   onRx: (rx: Prescription) => void;
 }) {
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
     <div className="sheet-scrim" data-testid="settings-scrim" onClick={onClose}>

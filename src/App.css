@@ -184,6 +184,7 @@ input:focus-visible {
   left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 20px);
   display: flex; justify-content: center;
 }
+.chrome-bottom.has-next { right: 76px; }
 .next-slot {
   position: absolute; z-index: 4;
   right: 16px; bottom: calc(env(safe-area-inset-bottom) + 18px);
@@ -198,6 +199,9 @@ input:focus-visible {
 }
 .caption .who { font-weight: 700; }
 .caption a { color: #fff; text-decoration: underline; }
+
+.chrome-top, .chrome-bottom, .next-slot, .caption { pointer-events: none; }
+.chrome-top > *, .chrome-bottom > *, .next-slot > *, .caption a { pointer-events: auto; }
 
 /* --- toast --- */
 .toast {
