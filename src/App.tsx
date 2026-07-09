@@ -9,7 +9,8 @@ import { parseGainParam } from './ui/parseGainParam';
 import { Prescription, EyeSelection } from './optics/types';
 import { SourceKind } from './ui/types';
 import { useLatestRef } from './ui/useLatestRef';
-import { Photo, fetchPhotos } from './sources/openverse';
+import { fetchPhotoPool } from './sources/openverse';
+import type { Photo } from './sources/openverse';
 import { loadImage } from './sources/loadImage';
 import { SourceSwitcher } from './ui/SourceSwitcher';
 import { EyeToggle } from './ui/EyeToggle';
@@ -94,12 +95,14 @@ export function App() {
     };
   }, [kind]);
 
-  // load a batch of photos when entering photo mode or when the batch empties
+  // load a mixed, shuffled pool of photos (drawn from several random
+  // categories) when entering photo mode or when the pool empties, so "Next"
+  // moves through varied photos in random order rather than one category
   useEffect(() => {
     if (kind !== 'photo') return;
     if (photos.length > 0) return;
     let cancelled = false;
-    fetchPhotos()
+    fetchPhotoPool()
       .then((list) => {
         if (cancelled) return;
         if (list.length === 0) throw new Error('empty');
