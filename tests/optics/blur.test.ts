@@ -5,11 +5,18 @@ import { PRESETS, TOMMY_RX, DEFAULT_PRESET_ID } from '../../src/optics/presets';
 
 describe('computeBlur', () => {
   it('scales sigma with diopters, width, and gain', () => {
+    // Explicit literal gain so this formula test is independent of the
+    // calibrated DEFAULT_BLUR_GAIN value (which is tuned by eye and changes).
     const m = eyeMeridians({ sph: -13.25, cyl: -3.25, axis: 5 });
-    const bp = computeBlur(m, 1000, DEFAULT_BLUR_GAIN);
-    expect(bp.sigma1).toBeCloseTo(0.0012 * 13.25 * 1000, 3); // 15.9
-    expect(bp.sigma2).toBeCloseTo(0.0012 * 16.5 * 1000, 3);  // 19.8
+    const bp = computeBlur(m, 1000, 0.001);
+    expect(bp.sigma1).toBeCloseTo(0.001 * 13.25 * 1000, 3); // 13.25
+    expect(bp.sigma2).toBeCloseTo(0.001 * 16.5 * 1000, 3);  // 16.5
     expect(bp.angleRad).toBeCloseTo((5 * Math.PI) / 180, 6);
+  });
+
+  it('defaults to the calibrated DEFAULT_BLUR_GAIN when no gain is passed', () => {
+    const m = eyeMeridians({ sph: -10, cyl: 0, axis: 0 });
+    expect(computeBlur(m, 1000).sigma1).toBeCloseTo(DEFAULT_BLUR_GAIN * 10 * 1000, 6);
   });
 
   it('produces equal sigmas for a pure sphere', () => {

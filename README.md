@@ -37,6 +37,8 @@ Deploys static to Netlify (`netlify.toml` included: publish `dist`, SPA redirect
 
 This is a physically-grounded approximation for empathy and illustration, not a medical instrument. It models the distance-viewing worst case and has a single calibration constant (`DEFAULT_BLUR_GAIN`) tuned by eye. "Both eyes" blends the two per-eye renders as an approximation of binocular fusion.
 
+To re-tune the blur, append `?gain=` to the URL (e.g. `?gain=0.0025`) to override the constant at runtime, compare against real vision, then set the value you like in `src/optics/blur.ts`.
+
 ## Image credits
 
 Photos are Creative Commons works surfaced via Openverse; each image shows its creator, license, and a link to the original source.

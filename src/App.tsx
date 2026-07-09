@@ -5,6 +5,7 @@ import { SCENES } from './sources/scenes';
 import { startCamera, CameraHandle } from './sources/camera';
 import { TOMMY_RX } from './optics/presets';
 import { DEFAULT_BLUR_GAIN } from './optics/blur';
+import { parseGainParam } from './ui/parseGainParam';
 import { Prescription, EyeSelection } from './optics/types';
 import { SourceKind } from './ui/types';
 import { useLatestRef } from './ui/useLatestRef';
@@ -36,7 +37,8 @@ export function App() {
   const [selection, setSelection] = useState<EyeSelection>('both');
   const [mode, setMode] = useState<RenderMode>('blurred');
   const [wipe, setWipe] = useState(0.5);
-  const [gain] = useState(DEFAULT_BLUR_GAIN); // fixed calibration knob, no UI setter
+  // Fixed calibration knob (no UI). `?gain=` overrides it for calibration/QA.
+  const [gain] = useState(() => parseGainParam(window.location.search) ?? DEFAULT_BLUR_GAIN);
   const [kind, setKind] = useState<SourceKind>('scene');
   const [sceneId, setSceneId] = useState(SCENES[0].id);
   const [photos, setPhotos] = useState<Photo[]>([]);
