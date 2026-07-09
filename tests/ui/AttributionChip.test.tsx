@@ -9,6 +9,7 @@ describe('AttributionChip', () => {
         photo={{
           id: '1',
           url: 'x',
+          thumbUrl: 'x-thumb',
           creator: 'Jane Doe',
           license: 'CC BY 4.0',
           licenseUrl: 'https://cc/by',
