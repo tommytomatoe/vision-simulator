@@ -3,7 +3,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SettingsSheet } from '../../src/ui/SettingsSheet';
 import { TOMMY_RX } from '../../src/optics/presets';
-import { SCENES } from '../../src/sources/scenes';
 
 function props(overrides = {}) {
   return {
@@ -11,8 +10,6 @@ function props(overrides = {}) {
     onClose: vi.fn(),
     kind: 'scene' as const,
     onKind: vi.fn(),
-    sceneId: SCENES[0].id,
-    onScene: vi.fn(),
     selection: 'both' as const,
     onSelection: vi.fn(),
     rx: TOMMY_RX,
@@ -30,15 +27,10 @@ describe('SettingsSheet', () => {
   it('switches source', async () => {
     const onKind = vi.fn();
     render(<SettingsSheet {...props({ onKind })} />);
+    // the three sources are Camera / Eye Test / Photos
+    expect(screen.getByRole('button', { name: /^eye test$/i })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /camera/i }));
     expect(onKind).toHaveBeenCalledWith('camera');
-  });
-
-  it('shows the scene sub-picker only when source is scenes', () => {
-    const { rerender } = render(<SettingsSheet {...props({ kind: 'scene' })} />);
-    expect(screen.getByRole('button', { name: /eye chart/i })).toBeInTheDocument();
-    rerender(<SettingsSheet {...props({ kind: 'photo' })} />);
-    expect(screen.queryByRole('button', { name: /eye chart/i })).not.toBeInTheDocument();
   });
 
   it('changes eye selection and applies a preset', async () => {

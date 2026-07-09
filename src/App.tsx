@@ -44,7 +44,6 @@ export function App() {
   const [wipe, setWipe] = useState(0.5);
   const [gain] = useState(() => parseGainParam(window.location.search) ?? DEFAULT_BLUR_GAIN);
   const [kind, setKind] = useState<SourceKind>('scene');
-  const [sceneId, setSceneId] = useState(SCENES[0].id);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
@@ -56,17 +55,17 @@ export function App() {
   const wipeRef = useLatestRef(wipe);
   const gainRef = useLatestRef(gain);
 
-  // set the active scene as the source
+  // the Eye Test source renders the eye chart
   useEffect(() => {
     if (kind !== 'scene') return;
-    let cvs = sceneCache.current.get(sceneId);
+    const scene = SCENES[0];
+    let cvs = sceneCache.current.get(scene.id);
     if (!cvs) {
-      const scene = SCENES.find((s) => s.id === sceneId) ?? SCENES[0];
       cvs = scene.render();
-      sceneCache.current.set(sceneId, cvs);
+      sceneCache.current.set(scene.id, cvs);
     }
     sourceRef.current = { el: cvs, w: cvs.width, h: cvs.height };
-  }, [kind, sceneId]);
+  }, [kind]);
 
   // camera lifecycle
   useEffect(() => {
@@ -204,7 +203,6 @@ export function App() {
   }, [rxRef, selRef, modeRef, wipeRef, gainRef]);
 
   const currentPhoto = kind === 'photo' ? photos[photoIndex] : undefined;
-  const sceneLabel = SCENES.find((s) => s.id === sceneId)?.label ?? 'Scenes';
   const shuffle = () => {
     if (photoIndex + 1 >= photos.length) setPhotos([]);
     else setPhotoIndex((i) => i + 1);
@@ -237,7 +235,7 @@ export function App() {
       {mode === 'wipe' && <WipeHandle value={wipe} onChange={setWipe} />}
 
       <div className="chrome-top">
-        <SourceChip kind={kind} sceneLabel={sceneLabel} onOpen={() => setSettingsOpen(true)} expanded={settingsOpen} />
+        <SourceChip kind={kind} onOpen={() => setSettingsOpen(true)} expanded={settingsOpen} />
         <IconButton label="Settings" onClick={() => setSettingsOpen(true)} expanded={settingsOpen} hasPopup>
           <SettingsIcon />
         </IconButton>
@@ -261,8 +259,6 @@ export function App() {
         onClose={() => setSettingsOpen(false)}
         kind={kind}
         onKind={setKind}
-        sceneId={sceneId}
-        onScene={setSceneId}
         selection={selection}
         onSelection={setSelection}
         rx={rx}
