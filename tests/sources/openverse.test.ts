@@ -49,8 +49,8 @@ describe('fetchPhotos', () => {
     expect(photos[0].creator).toBe('Jane Doe');
     expect(photos[0].license).toBe('CC BY 4.0');
     expect(photos[0].sourceUrl).toBe('https://example.com/photo');
-    // biases toward large images
-    expect(String(fetchMock.mock.calls[0][0])).toContain('size=large');
+    // restricts to real Flickr photography
+    expect(String(fetchMock.mock.calls[0][0])).toContain('source=flickr');
   });
 
   it('formats the cc0 license as "CC0" without a duplicated "CC" prefix', async () => {

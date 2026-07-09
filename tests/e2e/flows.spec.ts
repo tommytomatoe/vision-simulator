@@ -59,3 +59,28 @@ test('shows attribution for a stubbed Openverse photo', async ({ page }) => {
   await expect(page.getByTestId('attribution')).toContainText('Jane Doe');
   await expect(page.getByTestId('attribution')).toContainText('CC BY 4.0');
 });
+
+test('right arrow advances to the next photo', async ({ page }) => {
+  await page.route('**/api.openverse.org/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        results: [
+          { id: 'a', url: PNG, thumbnail: PNG, creator: 'Alpha One', license: 'by', foreign_landing_url: 'https://src/a', title: 'A' },
+          { id: 'b', url: PNG, thumbnail: PNG, creator: 'Beta Two', license: 'by', foreign_landing_url: 'https://src/b', title: 'B' },
+        ],
+      }),
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /^settings$/i }).click();
+  await page.getByRole('button', { name: /photos/i }).click();
+  await page.getByRole('button', { name: /^done$/i }).click();
+  const caption = page.getByTestId('attribution');
+  await expect(caption).toBeVisible();
+  const first = (await caption.textContent()) ?? '';
+  await page.keyboard.press('ArrowRight');
+  // pool has two distinct creators; advancing must change the caption
+  await expect(caption).not.toHaveText(first);
+});
