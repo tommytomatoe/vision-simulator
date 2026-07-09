@@ -160,19 +160,23 @@ export function App() {
 
     let raf = 0;
     const loop = () => {
-      const src = sourceRef.current;
-      if (src && src.w > 0 && src.h > 0) {
-        // keep camera dimensions fresh once metadata loads
-        if (cameraRef.current && src.el === cameraRef.current.video) {
-          src.w = cameraRef.current.video.videoWidth || src.w;
-          src.h = cameraRef.current.video.videoHeight || src.h;
+      try {
+        const src = sourceRef.current;
+        if (src && src.w > 0 && src.h > 0) {
+          // keep camera dimensions fresh once metadata loads
+          if (cameraRef.current && src.el === cameraRef.current.video) {
+            src.w = cameraRef.current.video.videoWidth || src.w;
+            src.h = cameraRef.current.video.videoHeight || src.h;
+          }
+          const eyes = selectedEyes(rxRef.current, selRef.current);
+          renderer.render(src.el, src.w, src.h, eyes, {
+            mode: modeRef.current,
+            wipe: wipeRef.current,
+            blurGain: gainRef.current,
+          });
         }
-        const eyes = selectedEyes(rxRef.current, selRef.current);
-        renderer.render(src.el, src.w, src.h, eyes, {
-          mode: modeRef.current,
-          wipe: wipeRef.current,
-          blurGain: gainRef.current,
-        });
+      } catch {
+        // skip this frame; a single bad frame shouldn't kill the render loop
       }
       raf = requestAnimationFrame(loop);
     };

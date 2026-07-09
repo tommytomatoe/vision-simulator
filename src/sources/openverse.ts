@@ -39,11 +39,13 @@ export async function fetchPhotos(query?: string, pageSize = 12): Promise<Photo[
   const res = await fetch(`${API}?${params.toString()}`);
   if (!res.ok) throw new Error(`Openverse request failed: ${res.status}`);
   const data = (await res.json()) as OpenverseResponse;
-  return data.results.map(toPhoto).filter((p) => !!p.url);
+  return data.results.map(toPhoto);
 }
 
 function toPhoto(r: OpenverseResult): Photo {
-  const license = `CC ${r.license.toUpperCase()}${r.license_version ? ' ' + r.license_version : ''}`;
+  const code = r.license.toUpperCase();
+  const base = code === 'CC0' ? 'CC0' : `CC ${code}`;
+  const license = `${base}${r.license_version ? ' ' + r.license_version : ''}`;
   return {
     id: r.id,
     url: r.thumbnail || r.url,
