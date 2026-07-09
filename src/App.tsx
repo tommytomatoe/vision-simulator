@@ -8,6 +8,12 @@ import { DEFAULT_BLUR_GAIN } from './optics/blur';
 import { Prescription, EyeSelection } from './optics/types';
 import { SourceKind } from './ui/types';
 import { useLatestRef } from './ui/useLatestRef';
+import { Photo, fetchPhotos } from './sources/openverse';
+import { loadImage } from './sources/loadImage';
+import { SourceSwitcher } from './ui/SourceSwitcher';
+import { EyeToggle } from './ui/EyeToggle';
+import { AttributionChip } from './ui/AttributionChip';
+import { Toast } from './ui/Toast';
 
 interface SourceFrame {
   el: TexImageSource;
@@ -23,13 +29,16 @@ export function App() {
   const sceneCache = useRef<Map<string, HTMLCanvasElement>>(new Map());
 
   const [webglError, setWebglError] = useState(false);
-  const [rx] = useState<Prescription>(TOMMY_RX);
-  const [selection] = useState<EyeSelection>('both');
-  const [mode] = useState<RenderMode>('blurred');
-  const [wipe] = useState(0.5);
-  const [gain] = useState(DEFAULT_BLUR_GAIN);
-  const [kind] = useState<SourceKind>('scene');
-  const [sceneId] = useState(SCENES[0].id);
+  const [rx, setRx] = useState<Prescription>(TOMMY_RX);
+  const [selection, setSelection] = useState<EyeSelection>('both');
+  const [mode, setMode] = useState<RenderMode>('blurred');
+  const [wipe, setWipe] = useState(0.5);
+  const [gain] = useState(DEFAULT_BLUR_GAIN); // fixed calibration knob, no UI setter
+  const [kind, setKind] = useState<SourceKind>('scene');
+  const [sceneId, setSceneId] = useState(SCENES[0].id);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [toast, setToast] = useState<string | null>(null);
 
   const rxRef = useLatestRef(rx);
   const selRef = useLatestRef(selection);
@@ -71,12 +80,58 @@ export function App() {
         };
       })
       .catch(() => {
-        /* fallback handled by controls in later tasks */
+        setToast('Camera unavailable — showing a scene instead.');
+        setKind('scene');
       });
     return () => {
       cancelled = true;
     };
   }, [kind]);
+
+  // load a batch of photos when entering photo mode or when the batch empties
+  useEffect(() => {
+    if (kind !== 'photo') return;
+    if (photos.length > 0) return;
+    let cancelled = false;
+    fetchPhotos()
+      .then((list) => {
+        if (cancelled) return;
+        if (list.length === 0) throw new Error('empty');
+        setPhotos(list);
+        setPhotoIndex(0);
+      })
+      .catch(() => {
+        setToast('Could not load photos — showing a scene instead.');
+        setKind('scene');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, photos.length]);
+
+  // set the current photo as the source
+  useEffect(() => {
+    if (kind !== 'photo') return;
+    const photo = photos[photoIndex];
+    if (!photo) return;
+    let cancelled = false;
+    loadImage(photo.url)
+      .then((img) => {
+        if (cancelled) return;
+        sourceRef.current = { el: img, w: img.naturalWidth, h: img.naturalHeight };
+      })
+      .catch(() => setToast('That photo failed to load — try Next.'));
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, photos, photoIndex]);
+
+  // auto-dismiss toast
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   // renderer + rAF loop + resize (mount once)
   useEffect(() => {
@@ -127,6 +182,12 @@ export function App() {
     };
   }, [rxRef, selRef, modeRef, wipeRef, gainRef]);
 
+  const currentPhoto = kind === 'photo' ? photos[photoIndex] : undefined;
+  const shuffle = () => {
+    if (photoIndex + 1 >= photos.length) setPhotos([]); // triggers a fresh fetch
+    else setPhotoIndex((i) => i + 1);
+  };
+
   if (webglError) {
     return (
       <div className="notice" data-testid="webgl-error">
@@ -139,6 +200,25 @@ export function App() {
   return (
     <div className="app">
       <canvas ref={canvasRef} className="stage" data-testid="stage" />
+      {currentPhoto && <AttributionChip photo={currentPhoto} />}
+      <Toast message={toast} />
+      <div className="controls">
+        <SourceSwitcher
+          kind={kind}
+          onKind={setKind}
+          sceneId={sceneId}
+          onScene={setSceneId}
+          onShuffle={shuffle}
+        />
+        <div className="row">
+          <EyeToggle value={selection} onChange={setSelection} />
+          {selection === 'both' && (
+            <span className="hint" data-testid="both-hint">
+              “Both” is an approximate blend of the two eyes
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

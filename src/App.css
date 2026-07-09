@@ -32,6 +32,7 @@ body {
   background: linear-gradient(to top, rgba(8,10,14,0.92), rgba(8,10,14,0.55) 70%, transparent);
 }
 .row { display: flex; gap: 0.5rem; align-items: center; justify-content: center; flex-wrap: wrap; }
+.hint { font-size: 0.7rem; color: #8b95a7; }
 .seg { display: inline-flex; border: 1px solid #2a3140; border-radius: 999px; overflow: hidden; background: #131722; }
 .seg button {
   border: 0; background: transparent; color: #c9d2e0;
