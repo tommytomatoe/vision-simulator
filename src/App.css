@@ -48,3 +48,27 @@ input:focus-visible {
   outline: 2px solid var(--espresso);
   outline-offset: 2px;
 }
+
+/* --- action bar (primary correction control) --- */
+.action-bar {
+  display: inline-flex;
+  gap: 3px;
+  background: var(--chrome);
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.20);
+}
+.action-bar button {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  padding: 9px 15px;
+  min-height: 44px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.action-bar button[aria-pressed='true'] { background: var(--espresso); color: #fff; }
