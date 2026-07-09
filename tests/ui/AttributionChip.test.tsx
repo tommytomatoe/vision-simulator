@@ -19,7 +19,7 @@ describe('AttributionChip', () => {
     );
     expect(screen.getByText(/Jane Doe/)).toBeInTheDocument();
     expect(screen.getByText(/CC BY 4.0/)).toBeInTheDocument();
-    const link = screen.getByRole('link', { name: /view source/i });
+    const link = screen.getByRole('link', { name: /^source$/i });
     expect(link).toHaveAttribute('href', 'https://src/photo');
   });
 });
