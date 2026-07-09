@@ -1,6 +1,7 @@
 export interface Photo {
   id: string;
-  url: string; // CORS-safe Openverse thumbnail
+  url: string; // high-res original (CORS-safe for standard CC hosts); display image
+  thumbUrl: string; // Openverse proxied thumbnail — always CORS-safe; fallback
   creator: string;
   license: string;
   licenseUrl: string;
@@ -35,6 +36,7 @@ export async function fetchPhotos(query?: string, pageSize = 12): Promise<Photo[
     page_size: String(pageSize),
     license_type: 'all-cc',
     mature: 'false',
+    size: 'large', // bias toward high-resolution originals
   });
   const res = await fetch(`${API}?${params.toString()}`);
   if (!res.ok) throw new Error(`Openverse request failed: ${res.status}`);
@@ -91,7 +93,8 @@ function toPhoto(r: OpenverseResult): Photo {
   const license = `${base}${r.license_version ? ' ' + r.license_version : ''}`;
   return {
     id: r.id,
-    url: r.thumbnail || r.url,
+    url: r.url,
+    thumbUrl: r.thumbnail || r.url,
     creator: r.creator || 'Unknown',
     license,
     licenseUrl: r.license_url || '',

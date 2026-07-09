@@ -5,7 +5,13 @@ afterEach(() => vi.restoreAllMocks());
 
 // Build an OpenverseResult with just the fields toPhoto needs.
 function result(id: string) {
-  return { id, thumbnail: `https://cdn/${id}`, license: 'by', foreign_landing_url: `https://src/${id}` };
+  return {
+    id,
+    url: `https://full/${id}.jpg`,
+    thumbnail: `https://cdn/${id}`,
+    license: 'by',
+    foreign_landing_url: `https://src/${id}`,
+  };
 }
 
 // Mock fetch that returns category-specific results keyed by the `q` param.
@@ -33,16 +39,18 @@ describe('fetchPhotos', () => {
         },
       ],
     };
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(mockJson) }),
-    );
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(mockJson) });
+    vi.stubGlobal('fetch', fetchMock);
     const photos = await fetchPhotos('landscape');
     expect(photos).toHaveLength(1);
-    expect(photos[0].url).toBe('https://api.openverse.org/v1/images/abc/thumb/');
+    // display url is the high-res original; thumbUrl is the CORS-safe proxy fallback
+    expect(photos[0].url).toBe('https://example.com/full.jpg');
+    expect(photos[0].thumbUrl).toBe('https://api.openverse.org/v1/images/abc/thumb/');
     expect(photos[0].creator).toBe('Jane Doe');
     expect(photos[0].license).toBe('CC BY 4.0');
     expect(photos[0].sourceUrl).toBe('https://example.com/photo');
+    // biases toward large images
+    expect(String(fetchMock.mock.calls[0][0])).toContain('size=large');
   });
 
   it('formats the cc0 license as "CC0" without a duplicated "CC" prefix', async () => {

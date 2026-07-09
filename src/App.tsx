@@ -125,12 +125,19 @@ export function App() {
     const photo = photos[photoIndex];
     if (!photo) return;
     let cancelled = false;
+    const setSource = (img: HTMLImageElement) => {
+      if (cancelled) return;
+      sourceRef.current = { el: img, w: img.naturalWidth, h: img.naturalHeight };
+    };
+    // Prefer the high-res original; if it isn't CORS-loadable, fall back to
+    // the always-CORS-safe Openverse thumbnail so a photo still shows.
     loadImage(photo.url)
-      .then((img) => {
-        if (cancelled) return;
-        sourceRef.current = { el: img, w: img.naturalWidth, h: img.naturalHeight };
-      })
-      .catch(() => setToast('That photo failed to load — try Next.'));
+      .then(setSource)
+      .catch(() =>
+        loadImage(photo.thumbUrl)
+          .then(setSource)
+          .catch(() => setToast('That photo failed to load — try Next.')),
+      );
     return () => {
       cancelled = true;
     };
