@@ -2,14 +2,13 @@ import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { SourceKind } from './types';
 import type { EyeSelection, Prescription } from '../optics/types';
-import { SCENES } from '../sources/scenes';
-import { CameraIcon, ShapesIcon, ImageIcon } from './icons';
+import { CameraIcon, EyeIcon, ImageIcon } from './icons';
 import { EyeToggle } from './EyeToggle';
 import { RxPanel } from './RxPanel';
 
 const SOURCES: { value: SourceKind; label: string; icon: ReactNode }[] = [
   { value: 'camera', label: 'Camera', icon: <CameraIcon size={15} /> },
-  { value: 'scene', label: 'Scenes', icon: <ShapesIcon size={15} /> },
+  { value: 'scene', label: 'Eye Test', icon: <EyeIcon size={15} /> },
   { value: 'photo', label: 'Photos', icon: <ImageIcon size={15} /> },
 ];
 
@@ -18,8 +17,6 @@ export function SettingsSheet({
   onClose,
   kind,
   onKind,
-  sceneId,
-  onScene,
   selection,
   onSelection,
   rx,
@@ -29,8 +26,6 @@ export function SettingsSheet({
   onClose: () => void;
   kind: SourceKind;
   onKind: (k: SourceKind) => void;
-  sceneId: string;
-  onScene: (id: string) => void;
   selection: EyeSelection;
   onSelection: (v: EyeSelection) => void;
   rx: Prescription;
@@ -67,15 +62,6 @@ export function SettingsSheet({
                 </button>
               ))}
             </div>
-            {kind === 'scene' && (
-              <div className="subseg" role="group" aria-label="Scene">
-                {SCENES.map((sc) => (
-                  <button key={sc.id} aria-pressed={sceneId === sc.id} onClick={() => onScene(sc.id)}>
-                    {sc.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </section>
 
           <section className="section">
