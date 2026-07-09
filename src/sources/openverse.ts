@@ -36,7 +36,7 @@ export async function fetchPhotos(query?: string, pageSize = 12): Promise<Photo[
     page_size: String(pageSize),
     license_type: 'all-cc',
     mature: 'false',
-    size: 'large', // bias toward high-resolution originals
+    source: 'flickr', // real photography only (excludes flags/diagrams/clip-art)
   });
   const res = await fetch(`${API}?${params.toString()}`);
   if (!res.ok) throw new Error(`Openverse request failed: ${res.status}`);

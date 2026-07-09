@@ -210,6 +210,18 @@ export function App() {
     else setPhotoIndex((i) => i + 1);
   };
 
+  // Right arrow advances photos (only in photo mode, and not while the
+  // settings sheet is open so arrow keys can still drive focused sliders).
+  const shuffleRef = useLatestRef(shuffle);
+  useEffect(() => {
+    if (kind !== 'photo' || settingsOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') shuffleRef.current();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [kind, settingsOpen, shuffleRef]);
+
   if (webglError) {
     return (
       <div className="notice" data-testid="webgl-error">
