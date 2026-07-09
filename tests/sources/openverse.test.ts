@@ -1,7 +1,20 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fetchPhotos } from '../../src/sources/openverse';
+import { fetchPhotos, fetchPhotoPool } from '../../src/sources/openverse';
 
 afterEach(() => vi.restoreAllMocks());
+
+// Build an OpenverseResult with just the fields toPhoto needs.
+function result(id: string) {
+  return { id, thumbnail: `https://cdn/${id}`, license: 'by', foreign_landing_url: `https://src/${id}` };
+}
+
+// Mock fetch that returns category-specific results keyed by the `q` param.
+function mockFetchByQuery(byQuery: Record<string, ReturnType<typeof result>[]>) {
+  return vi.fn((url: string) => {
+    const q = new URL(url).searchParams.get('q') ?? '';
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({ results: byQuery[q] ?? [] }) });
+  });
+}
 
 describe('fetchPhotos', () => {
   it('maps Openverse results to Photo with formatted license and thumbnail url', async () => {
@@ -58,5 +71,56 @@ describe('fetchPhotos', () => {
   it('throws on non-ok response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 429 }));
     await expect(fetchPhotos('x')).rejects.toThrow('429');
+  });
+});
+
+describe('fetchPhotoPool', () => {
+  it('merges photos from several distinct categories into one pool', async () => {
+    // random=0 makes pickDistinct choose the first N queries: landscape, street, city.
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    vi.stubGlobal(
+      'fetch',
+      mockFetchByQuery({
+        landscape: [result('l1'), result('l2')],
+        street: [result('s1'), result('s2')],
+        city: [result('c1'), result('c2')],
+      }),
+    );
+    const pool = await fetchPhotoPool(3, 2);
+    const ids = pool.map((p) => p.id).sort();
+    expect(ids).toEqual(['c1', 'c2', 'l1', 'l2', 's1', 's2']);
+  });
+
+  it('dedupes photos that appear in more than one category', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    vi.stubGlobal(
+      'fetch',
+      mockFetchByQuery({
+        landscape: [result('dup'), result('l2')],
+        street: [result('dup'), result('s2')],
+        city: [result('c1')],
+      }),
+    );
+    const pool = await fetchPhotoPool(3, 2);
+    const ids = pool.map((p) => p.id).sort();
+    expect(ids).toEqual(['c1', 'dup', 'l2', 's2']);
+  });
+
+  it('tolerates a failing category without dropping the whole pool', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        const q = new URL(url).searchParams.get('q');
+        if (q === 'street') return Promise.resolve({ ok: false, status: 500 });
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ results: [result(q as string)] }),
+        });
+      }),
+    );
+    const pool = await fetchPhotoPool(3, 2);
+    const ids = pool.map((p) => p.id).sort();
+    expect(ids).toEqual(['city', 'landscape']); // street failed, others survived
   });
 });
