@@ -16,6 +16,7 @@ import { AttributionChip } from './ui/AttributionChip';
 import { Toast } from './ui/Toast';
 import { CorrectionControls } from './ui/CorrectionControls';
 import { WipeHandle } from './ui/WipeHandle';
+import { RxPanel } from './ui/RxPanel';
 
 interface SourceFrame {
   el: TexImageSource;
@@ -41,6 +42,7 @@ export function App() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+  const [rxOpen, setRxOpen] = useState(false);
 
   const rxRef = useLatestRef(rx);
   const selRef = useLatestRef(selection);
@@ -224,6 +226,7 @@ export function App() {
         <div className="row">
           <CorrectionControls mode={mode} onMode={setMode} />
         </div>
+        <RxPanel rx={rx} onRx={setRx} open={rxOpen} onToggle={() => setRxOpen((o) => !o)} />
       </div>
     </div>
   );
