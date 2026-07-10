@@ -8,3 +8,6 @@ playwright-report/
 blob-report/
 playwright/.cache/
 .superpowers/
+
+# raw uploaded photo originals (optimized copies live in public/photos)
+/photos/*.jpg

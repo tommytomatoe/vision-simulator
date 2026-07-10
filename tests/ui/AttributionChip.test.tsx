@@ -3,24 +3,21 @@ import { render, screen } from '@testing-library/react';
 import { AttributionChip } from '../../src/ui/AttributionChip';
 
 describe('AttributionChip', () => {
-  it('shows creator, license, and a link to the source', () => {
+  it('shows the Unsplash credit with photographer and Unsplash links', () => {
     render(
       <AttributionChip
         photo={{
           id: '1',
-          url: 'x',
-          thumbUrl: 'x-thumb',
+          src: '/photos/1.jpg',
           creator: 'Jane Doe',
-          license: 'CC BY 4.0',
-          licenseUrl: 'https://cc/by',
-          sourceUrl: 'https://src/photo',
-          title: 'A View',
+          creatorUrl: 'https://unsplash.com/@jane',
+          unsplashUrl: 'https://unsplash.com/photos/abc-1',
+          alt: 'a scene',
         }}
       />,
     );
-    expect(screen.getByText(/Jane Doe/)).toBeInTheDocument();
-    expect(screen.getByText(/CC BY 4.0/)).toBeInTheDocument();
-    const link = screen.getByRole('link', { name: /^source$/i });
-    expect(link).toHaveAttribute('href', 'https://src/photo');
+    expect(screen.getByText(/Photo by/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Jane Doe' })).toHaveAttribute('href', 'https://unsplash.com/@jane');
+    expect(screen.getByRole('link', { name: 'Unsplash' })).toHaveAttribute('href', 'https://unsplash.com/photos/abc-1');
   });
 });

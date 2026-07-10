@@ -11,8 +11,8 @@ import { parseGainParam } from './ui/parseGainParam';
 import type { Prescription, EyeSelection } from './optics/types';
 import type { SourceKind } from './ui/types';
 import { useLatestRef } from './ui/useLatestRef';
-import { fetchPhotoPool } from './sources/openverse';
-import type { Photo } from './sources/openverse';
+import { shuffledPhotos } from './sources/photos';
+import type { Photo } from './sources/photos';
 import { loadImage } from './sources/loadImage';
 import { AttributionChip } from './ui/AttributionChip';
 import { Toast } from './ui/Toast';
@@ -97,25 +97,12 @@ export function App() {
     };
   }, [kind]);
 
-  // load a mixed, shuffled photo pool when entering photo mode or when it empties
+  // shuffle the bundled photo set when entering photo mode
   useEffect(() => {
     if (kind !== 'photo') return;
     if (photos.length > 0) return;
-    let cancelled = false;
-    fetchPhotoPool()
-      .then((list) => {
-        if (cancelled) return;
-        if (list.length === 0) throw new Error('empty');
-        setPhotos(list);
-        setPhotoIndex(0);
-      })
-      .catch(() => {
-        setToast('Could not load photos — showing a scene instead.');
-        setKind('scene');
-      });
-    return () => {
-      cancelled = true;
-    };
+    setPhotos(shuffledPhotos());
+    setPhotoIndex(0);
   }, [kind, photos.length]);
 
   // set the current photo as the source
@@ -124,19 +111,12 @@ export function App() {
     const photo = photos[photoIndex];
     if (!photo) return;
     let cancelled = false;
-    const setSource = (img: HTMLImageElement) => {
-      if (cancelled) return;
-      sourceRef.current = { el: img, w: img.naturalWidth, h: img.naturalHeight };
-    };
-    // Prefer the high-res original; if it isn't CORS-loadable, fall back to
-    // the always-CORS-safe Openverse thumbnail so a photo still shows.
-    loadImage(photo.url)
-      .then(setSource)
-      .catch(() =>
-        loadImage(photo.thumbUrl)
-          .then(setSource)
-          .catch(() => setToast('That photo failed to load — try Next.')),
-      );
+    loadImage(photo.src)
+      .then((img) => {
+        if (cancelled) return;
+        sourceRef.current = { el: img, w: img.naturalWidth, h: img.naturalHeight };
+      })
+      .catch(() => setToast('That photo failed to load — try Next.'));
     return () => {
       cancelled = true;
     };
@@ -204,8 +184,12 @@ export function App() {
 
   const currentPhoto = kind === 'photo' ? photos[photoIndex] : undefined;
   const shuffle = () => {
-    if (photoIndex + 1 >= photos.length) setPhotos([]);
-    else setPhotoIndex((i) => i + 1);
+    if (photoIndex + 1 >= photos.length) {
+      setPhotos(shuffledPhotos()); // reached the end — reshuffle for a fresh pass
+      setPhotoIndex(0);
+    } else {
+      setPhotoIndex((i) => i + 1);
+    }
   };
   // The "next" arrow advances photos in photo mode, and from the eye chart it
   // jumps straight into photo mode.
