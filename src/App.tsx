@@ -207,18 +207,24 @@ export function App() {
     if (photoIndex + 1 >= photos.length) setPhotos([]);
     else setPhotoIndex((i) => i + 1);
   };
+  // The "next" arrow advances photos in photo mode, and from the eye chart it
+  // jumps straight into photo mode.
+  const advance = () => {
+    if (kind === 'photo') shuffle();
+    else setKind('photo');
+  };
 
-  // Right arrow advances photos (only in photo mode, and not while the
-  // settings sheet is open so arrow keys can still drive focused sliders).
-  const shuffleRef = useLatestRef(shuffle);
+  // Right arrow mirrors the next arrow (photo mode or the eye chart), but not
+  // while the settings sheet is open so arrow keys can still drive sliders.
+  const advanceRef = useLatestRef(advance);
   useEffect(() => {
-    if (kind !== 'photo' || settingsOpen) return;
+    if (settingsOpen || (kind !== 'photo' && kind !== 'scene')) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') shuffleRef.current();
+      if (e.key === 'ArrowRight') advanceRef.current();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [kind, settingsOpen, shuffleRef]);
+  }, [kind, settingsOpen, advanceRef]);
 
   if (webglError) {
     return (
@@ -243,12 +249,12 @@ export function App() {
 
       {currentPhoto && <AttributionChip photo={currentPhoto} />}
 
-      <div className={kind === 'photo' ? 'chrome-bottom has-next' : 'chrome-bottom'}>
+      <div className={kind === 'camera' ? 'chrome-bottom' : 'chrome-bottom has-next'}>
         <CorrectionControls mode={mode} onMode={setMode} />
       </div>
-      {kind === 'photo' && (
+      {kind !== 'camera' && (
         <div className="next-slot">
-          <NextButton onNext={shuffle} />
+          <NextButton onNext={advance} />
         </div>
       )}
 
