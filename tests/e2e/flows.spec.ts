@@ -60,6 +60,28 @@ test('shows attribution for a stubbed Openverse photo', async ({ page }) => {
   await expect(page.getByTestId('attribution')).toContainText('CC BY 4.0');
 });
 
+test('the next arrow shows on the eye chart and jumps to photos', async ({ page }) => {
+  await page.route('**/api.openverse.org/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        results: [
+          { id: 'x', url: PNG, thumbnail: PNG, creator: 'Jane Doe', license: 'by', license_version: '4.0', foreign_landing_url: 'https://src/x', title: 'A View' },
+        ],
+      }),
+    });
+  });
+  await page.goto('/');
+  // default view is the eye chart (no photo yet), but the next arrow is present
+  await expect(page.getByTestId('attribution')).toHaveCount(0);
+  const next = page.getByRole('button', { name: /next photo/i });
+  await expect(next).toBeVisible();
+  await next.click();
+  // clicking it from the eye chart drops straight into photo mode
+  await expect(page.getByTestId('attribution')).toContainText('Jane Doe');
+});
+
 test('right arrow advances to the next photo', async ({ page }) => {
   await page.route('**/api.openverse.org/**', async (route) => {
     await route.fulfill({
