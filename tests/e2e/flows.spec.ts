@@ -48,25 +48,25 @@ test('the next arrow shows on the eye chart and jumps to photos', async ({ page 
   await expect(page.getByTestId('attribution')).toContainText(/Photo by/);
 });
 
-test('preloads upcoming photos after entering photo mode', async ({ page }) => {
+test('preloads photos at app load and extends the warm window in photo mode', async ({ page }) => {
+  const photoRequests = () =>
+    page.evaluate(
+      () =>
+        performance
+          .getEntriesByType('resource')
+          .filter((e) => e.name.includes('/photos/')).length,
+    );
+
   await page.goto('/');
+  // 3 photos warm on load, before photo mode is ever opened
+  await expect.poll(photoRequests, { timeout: 10_000 }).toBeGreaterThanOrEqual(3);
+
   await page.getByRole('button', { name: /^settings$/i }).click();
   await page.getByRole('button', { name: /photos/i }).click();
   await page.getByRole('button', { name: /^done$/i }).click();
   await expect(page.getByTestId('attribution')).toBeVisible();
-  // current photo + 3 preloaded = at least 4 requests without any Next click
-  await expect
-    .poll(
-      () =>
-        page.evaluate(
-          () =>
-            performance
-              .getEntriesByType('resource')
-              .filter((e) => e.name.includes('/photos/')).length,
-        ),
-      { timeout: 10_000 },
-    )
-    .toBeGreaterThanOrEqual(4);
+  // showing photo[0] preloads 1–3 = at least 4 distinct photos requested
+  await expect.poll(photoRequests, { timeout: 10_000 }).toBeGreaterThanOrEqual(4);
 });
 
 test('right arrow advances to the next photo', async ({ page }) => {

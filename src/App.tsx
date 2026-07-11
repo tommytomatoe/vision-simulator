@@ -45,7 +45,7 @@ export function App() {
   const [wipe, setWipe] = useState(0.5);
   const [gain] = useState(() => parseGainParam(window.location.search) ?? DEFAULT_BLUR_GAIN);
   const [kind, setKind] = useState<SourceKind>('scene');
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>(() => shuffledPhotos());
   const [photoIndex, setPhotoIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -100,13 +100,11 @@ export function App() {
     };
   }, [kind]);
 
-  // shuffle the bundled photo set when entering photo mode
+  // warm the first photos at app load (and after each end-of-pool reshuffle)
+  // so the very first jump into photo mode doesn't pay a cold fetch
   useEffect(() => {
-    if (kind !== 'photo') return;
-    if (photos.length > 0) return;
-    setPhotos(shuffledPhotos());
-    setPhotoIndex(0);
-  }, [kind, photos.length]);
+    photoLoader.preload(photos.slice(0, 3).map((p) => p.src));
+  }, [photos, photoLoader]);
 
   // set the current photo as the source, then warm the next few so Next is
   // instant (cache hit) instead of paying a fetch+decode on click
