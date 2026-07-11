@@ -13,6 +13,18 @@ test('renders the stage and switches correction modes', async ({ page }) => {
   await expect(page.getByTestId('wipe-handle')).toBeVisible();
 });
 
+test('rx chip shows the active prescription and opens settings', async ({ page }) => {
+  await page.goto('/');
+  const chip = page.getByTestId('rx-chip');
+  // Tommy's is the default, shown as per-eye spheres rather than a preset name
+  await expect(chip).toContainText('R −13.25 · L −15.00');
+  await chip.click();
+  await expect(page.getByTestId('settings-sheet')).toBeVisible();
+  await page.getByRole('button', { name: '20/40', exact: true }).click();
+  await page.getByRole('button', { name: /^done$/i }).click();
+  await expect(chip).toContainText('20/40 vision');
+});
+
 test('camera denied falls back to a scene (from the settings sheet)', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'mediaDevices', {

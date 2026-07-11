@@ -20,6 +20,7 @@ import { Toast } from './ui/Toast';
 import { CorrectionControls } from './ui/CorrectionControls';
 import { WipeHandle } from './ui/WipeHandle';
 import { SourceChip } from './ui/SourceChip';
+import { RxChip } from './ui/RxChip';
 import { IconButton } from './ui/IconButton';
 import { NextButton } from './ui/NextButton';
 import { SettingsSheet } from './ui/SettingsSheet';
@@ -262,7 +263,10 @@ export function App() {
       {mode === 'wipe' && <WipeHandle value={wipe} onChange={setWipe} />}
 
       <div className="chrome-top">
-        <SourceChip kind={kind} onOpen={openSettings} expanded={settingsOpen} />
+        <div className="chrome-top-left">
+          <SourceChip kind={kind} onOpen={openSettings} expanded={settingsOpen} />
+          <RxChip rx={rx} onOpen={openSettings} />
+        </div>
         <IconButton label="Settings" onClick={openSettings} expanded={settingsOpen} hasPopup>
           <SettingsIcon />
         </IconButton>

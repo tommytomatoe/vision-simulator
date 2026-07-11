@@ -95,6 +95,20 @@ input:focus-visible {
 }
 .source-chip span { line-height: 1; }
 
+/* --- rx chip (current prescription, under the source chip) --- */
+.rx-chip {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--chrome); color: var(--ink);
+  border: 0; border-radius: 999px;
+  padding: 6px 12px; min-height: 36px;
+  font: inherit; font-size: 0.72rem; font-weight: 650;
+  cursor: pointer; box-shadow: var(--chrome-shadow);
+  white-space: nowrap;
+}
+/* pad the touch target out to ~44px without growing the chip visually */
+.rx-chip::after { content: ''; position: absolute; inset: -4px; border-radius: 999px; }
+
 /* --- segmented pills (source + eyes, inside the sheet) --- */
 .seg { display: flex; gap: 5px; }
 .seg button {
@@ -177,8 +191,9 @@ input:focus-visible {
 .chrome-top {
   position: absolute; z-index: 4;
   top: calc(env(safe-area-inset-top) + 14px); left: 14px; right: 14px;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: flex-start; justify-content: space-between;
 }
+.chrome-top-left { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .chrome-bottom {
   position: absolute; z-index: 4;
   left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 20px);
@@ -202,6 +217,9 @@ input:focus-visible {
 
 .chrome-top, .chrome-bottom, .next-slot, .caption { pointer-events: none; }
 .chrome-top > *, .chrome-bottom > *, .next-slot > *, .caption a { pointer-events: auto; }
+/* the top-left stack is a wrapper; only its chips should catch taps */
+.chrome-top-left { pointer-events: none; }
+.chrome-top-left > * { pointer-events: auto; }
 
 /* --- toast --- */
 .toast {

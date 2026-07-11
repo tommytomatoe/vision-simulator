@@ -1,16 +1,11 @@
 import { useState } from 'react';
 import type { Prescription, EyeRx } from '../optics/types';
-import { PRESETS } from '../optics/presets';
+import { PRESETS, sameRx } from '../optics/presets';
 import { ChevronRight } from './icons';
 import { track } from '../analytics';
 
 type EyeKey = 'right' | 'left';
 type Field = keyof EyeRx;
-
-function sameRx(a: Prescription, b: Prescription): boolean {
-  const eq = (x: EyeRx, y: EyeRx) => x.sph === y.sph && x.cyl === y.cyl && x.axis === y.axis;
-  return eq(a.right, b.right) && eq(a.left, b.left);
-}
 
 function EyeSliders({
   eyeKey,
