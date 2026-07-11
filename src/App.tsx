@@ -11,6 +11,7 @@ import { parseGainParam } from './ui/parseGainParam';
 import type { Prescription, EyeSelection } from './optics/types';
 import type { SourceKind } from './ui/types';
 import { useLatestRef } from './ui/useLatestRef';
+import { track } from './analytics';
 import { shuffledPhotos } from './sources/photos';
 import type { Photo } from './sources/photos';
 import { loadImage } from './sources/loadImage';
@@ -89,6 +90,7 @@ export function App() {
         };
       })
       .catch(() => {
+        track('camera_denied');
         setToast('Camera unavailable — showing a scene instead.');
         setKind('scene');
       });
@@ -137,6 +139,7 @@ export function App() {
       renderer = new VisionRenderer(canvas);
     } catch (err) {
       console.error('VisionRenderer init failed:', err);
+      track('webgl_unsupported');
       setWebglError(true);
       return;
     }
@@ -193,9 +196,14 @@ export function App() {
   };
   // The "next" arrow advances photos in photo mode, and from the eye chart it
   // jumps straight into photo mode.
-  const advance = () => {
-    if (kind === 'photo') shuffle();
-    else setKind('photo');
+  const advance = (method: 'button' | 'arrow_key') => {
+    if (kind === 'photo') {
+      shuffle();
+      track('photo_next', { method });
+    } else {
+      setKind('photo');
+      track('source_change', { source: 'photo', trigger: 'next_arrow' });
+    }
   };
 
   // Right arrow mirrors the next arrow (photo mode or the eye chart), but not
@@ -204,11 +212,28 @@ export function App() {
   useEffect(() => {
     if (settingsOpen || (kind !== 'photo' && kind !== 'scene')) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') advanceRef.current();
+      if (e.key === 'ArrowRight') advanceRef.current('arrow_key');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [kind, settingsOpen, advanceRef]);
+
+  const openSettings = () => {
+    setSettingsOpen(true);
+    track('settings_open');
+  };
+  const changeMode = (m: RenderMode) => {
+    setMode(m);
+    track('correction_change', { mode: m });
+  };
+  const changeKind = (k: SourceKind) => {
+    setKind(k);
+    track('source_change', { source: k, trigger: 'settings' });
+  };
+  const changeSelection = (eye: EyeSelection) => {
+    setSelection(eye);
+    track('eye_change', { eye });
+  };
 
   if (webglError) {
     return (
@@ -225,8 +250,8 @@ export function App() {
       {mode === 'wipe' && <WipeHandle value={wipe} onChange={setWipe} />}
 
       <div className="chrome-top">
-        <SourceChip kind={kind} onOpen={() => setSettingsOpen(true)} expanded={settingsOpen} />
-        <IconButton label="Settings" onClick={() => setSettingsOpen(true)} expanded={settingsOpen} hasPopup>
+        <SourceChip kind={kind} onOpen={openSettings} expanded={settingsOpen} />
+        <IconButton label="Settings" onClick={openSettings} expanded={settingsOpen} hasPopup>
           <SettingsIcon />
         </IconButton>
       </div>
@@ -234,11 +259,11 @@ export function App() {
       {currentPhoto && <AttributionChip photo={currentPhoto} />}
 
       <div className={kind === 'camera' ? 'chrome-bottom' : 'chrome-bottom has-next'}>
-        <CorrectionControls mode={mode} onMode={setMode} />
+        <CorrectionControls mode={mode} onMode={changeMode} />
       </div>
       {kind !== 'camera' && (
         <div className="next-slot">
-          <NextButton onNext={advance} />
+          <NextButton onNext={() => advance('button')} />
         </div>
       )}
 
@@ -248,9 +273,9 @@ export function App() {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         kind={kind}
-        onKind={setKind}
+        onKind={changeKind}
         selection={selection}
-        onSelection={setSelection}
+        onSelection={changeSelection}
         rx={rx}
         onRx={setRx}
       />

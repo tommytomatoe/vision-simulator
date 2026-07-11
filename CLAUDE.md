@@ -31,6 +31,18 @@ add, remove, or swap photos:
 set on entering photo mode and reshuffles after the last photo. Attribution is
 the required "Photo by <creator> on Unsplash" (both links).
 
+## Analytics
+
+Google Analytics is injected at **build time only when the `VITE_GA_ID` env var
+is set** (plugin in `vite.config.ts`). The measurement ID is deliberately NOT
+committed — it lives in Netlify (Site configuration → Environment variables →
+`VITE_GA_ID`). Local dev/test builds therefore send no analytics at all.
+
+Events go through `track()` in `src/analytics.ts` (a safe no-op when GA is
+absent). The event taxonomy is documented in that file's header — keep params
+low-cardinality and never send user-entered prescription values (preset ids and
+facts-of-use only).
+
 ## Commands
 
 - `npm run dev` — dev server (has React StrictMode; see the context-loss note below)

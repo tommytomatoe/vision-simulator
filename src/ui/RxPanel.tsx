@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Prescription, EyeRx } from '../optics/types';
 import { PRESETS } from '../optics/presets';
 import { ChevronRight } from './icons';
+import { track } from '../analytics';
 
 type EyeKey = 'right' | 'left';
 type Field = keyof EyeRx;
@@ -49,16 +50,24 @@ export function RxPanel({ rx, onRx }: { rx: Prescription; onRx: (rx: Prescriptio
   const onField = (eyeKey: EyeKey, field: Field, value: number) => {
     onRx({ ...rx, [eyeKey]: { ...rx[eyeKey], [field]: value } });
   };
+  const applyPreset = (id: string, preset: Prescription) => {
+    onRx(preset);
+    track('preset_apply', { preset_id: id });
+  };
+  const toggleFinetune = () => {
+    if (!open) track('finetune_open'); // keep side effects out of the state updater
+    setOpen(!open);
+  };
   return (
     <div>
       <div className="preset-chips">
         {PRESETS.map((p) => (
-          <button key={p.id} className="preset-chip" aria-pressed={sameRx(p.rx, rx)} onClick={() => onRx(p.rx)}>
+          <button key={p.id} className="preset-chip" aria-pressed={sameRx(p.rx, rx)} onClick={() => applyPreset(p.id, p.rx)}>
             {p.label}
           </button>
         ))}
       </div>
-      <button className="expander" aria-expanded={open} data-testid="finetune-toggle" onClick={() => setOpen((o) => !o)}>
+      <button className="expander" aria-expanded={open} data-testid="finetune-toggle" onClick={toggleFinetune}>
         Fine-tune each eye
         <span className={open ? 'chev chev--open' : 'chev'}><ChevronRight size={16} /></span>
       </button>
