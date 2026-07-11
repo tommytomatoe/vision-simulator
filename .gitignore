@@ -11,3 +11,6 @@ playwright/.cache/
 
 # raw uploaded photo originals (optimized copies live in public/photos)
 /photos/*.jpg
+
+# local working notes, not for the repo
+/docs/seo-strategy.md
