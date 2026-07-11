@@ -48,6 +48,27 @@ test('the next arrow shows on the eye chart and jumps to photos', async ({ page 
   await expect(page.getByTestId('attribution')).toContainText(/Photo by/);
 });
 
+test('preloads upcoming photos after entering photo mode', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^settings$/i }).click();
+  await page.getByRole('button', { name: /photos/i }).click();
+  await page.getByRole('button', { name: /^done$/i }).click();
+  await expect(page.getByTestId('attribution')).toBeVisible();
+  // current photo + 3 preloaded = at least 4 requests without any Next click
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () =>
+            performance
+              .getEntriesByType('resource')
+              .filter((e) => e.name.includes('/photos/')).length,
+        ),
+      { timeout: 10_000 },
+    )
+    .toBeGreaterThanOrEqual(4);
+});
+
 test('right arrow advances to the next photo', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^settings$/i }).click();

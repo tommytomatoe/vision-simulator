@@ -14,7 +14,7 @@ import { useLatestRef } from './ui/useLatestRef';
 import { track } from './analytics';
 import { shuffledPhotos } from './sources/photos';
 import type { Photo } from './sources/photos';
-import { loadImage } from './sources/loadImage';
+import { createPhotoLoader } from './sources/photoCache';
 import { AttributionChip } from './ui/AttributionChip';
 import { Toast } from './ui/Toast';
 import { CorrectionControls } from './ui/CorrectionControls';
@@ -49,6 +49,7 @@ export function App() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [photoLoader] = useState(() => createPhotoLoader());
 
   const rxRef = useLatestRef(rx);
   const selRef = useLatestRef(selection);
@@ -107,22 +108,25 @@ export function App() {
     setPhotoIndex(0);
   }, [kind, photos.length]);
 
-  // set the current photo as the source
+  // set the current photo as the source, then warm the next few so Next is
+  // instant (cache hit) instead of paying a fetch+decode on click
   useEffect(() => {
     if (kind !== 'photo') return;
     const photo = photos[photoIndex];
     if (!photo) return;
     let cancelled = false;
-    loadImage(photo.src)
+    photoLoader
+      .load(photo.src)
       .then((img) => {
         if (cancelled) return;
         sourceRef.current = { el: img, w: img.naturalWidth, h: img.naturalHeight };
       })
       .catch(() => setToast('That photo failed to load — try Next.'));
+    photoLoader.preload(photos.slice(photoIndex + 1, photoIndex + 4).map((p) => p.src));
     return () => {
       cancelled = true;
     };
-  }, [kind, photos, photoIndex]);
+  }, [kind, photos, photoIndex, photoLoader]);
 
   // auto-dismiss toast
   useEffect(() => {
