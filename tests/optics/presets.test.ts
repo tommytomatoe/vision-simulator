@@ -30,6 +30,20 @@ describe('rxLabel', () => {
     expect(rxLabel(custom)).toBe('R −8.25 · L −6.50');
   });
 
+  it('labels the farsighted preset with its chip label', () => {
+    const plus5 = PRESETS.find((p) => p.id === 'plus-5')!;
+    expect(plus5.rx.right.sph).toBe(5.0);
+    expect(rxLabel(plus5.rx)).toBe('Farsighted +5');
+  });
+
+  it('formats positive spheres with an explicit plus sign', () => {
+    const rx: Prescription = {
+      right: { sph: 4.25, cyl: 0, axis: 0 },
+      left: { sph: 3.5, cyl: -0.75, axis: 90 },
+    };
+    expect(rxLabel(rx)).toBe('R +4.25 · L +3.50');
+  });
+
   it('formats a plano eye without a stray minus sign', () => {
     const rx: Prescription = {
       right: { sph: 0, cyl: -2.0, axis: 45 },

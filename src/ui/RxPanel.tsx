@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Prescription, EyeRx } from '../optics/types';
-import { PRESETS, sameRx } from '../optics/presets';
+import { PRESETS, sameRx, formatSph } from '../optics/presets';
 import { ChevronRight } from './icons';
 import { track } from '../analytics';
 
@@ -22,8 +22,8 @@ function EyeSliders({
     <div className="eye-group">
       <strong>{label}</strong>
       <label className="slider-field">
-        {label} sphere: {eye.sph.toFixed(2)} D
-        <input type="range" min={-20} max={0} step={0.25} value={eye.sph}
+        {label} sphere: {formatSph(eye.sph)} D
+        <input type="range" min={-20} max={10} step={0.25} value={eye.sph}
           onChange={(e) => onField(eyeKey, 'sph', parseFloat(e.target.value))} />
       </label>
       <label className="slider-field">
@@ -62,6 +62,12 @@ export function RxPanel({ rx, onRx }: { rx: Prescription; onRx: (rx: Prescriptio
           </button>
         ))}
       </div>
+      {(rx.right.sph > 0 || rx.left.sph > 0) && (
+        <p className="hint" data-testid="farsighted-hint">
+          Plus (farsighted) blur assumes the eye can't focus it away — truest for stronger
+          prescriptions and older eyes.
+        </p>
+      )}
       <button className="expander" aria-expanded={open} data-testid="finetune-toggle" onClick={toggleFinetune}>
         Fine-tune each eye
         <span className={open ? 'chev chev--open' : 'chev'}><ChevronRight size={16} /></span>

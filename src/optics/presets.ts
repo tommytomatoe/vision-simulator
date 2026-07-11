@@ -37,6 +37,9 @@ export const PRESETS: Preset[] = [
   { id: '20-70', label: '20/70', chipLabel: '20/70 vision', rx: sphere(-1.75) },
   { id: '20-100', label: '20/100', chipLabel: '20/100 vision', rx: sphere(-2.5) },
   { id: '20-200', label: '20/200 (Legally blind)', chipLabel: '20/200 vision', rx: sphere(-4.0) },
+  // A plus strong enough that accommodation can't cover it — uniform blur is
+  // honest here, unlike mild hyperopia where a young eye just focuses through.
+  { id: 'plus-5', label: 'Farsighted (+5)', chipLabel: 'Farsighted +5', rx: sphere(5.0) },
   // Tommy's has no chipLabel on purpose: the chip shows the actual numbers.
   { id: 'tommy', label: "Tommy's eyes (−13/−15)", rx: TOMMY_RX },
 ];
@@ -46,9 +49,11 @@ export function sameRx(a: Prescription, b: Prescription): boolean {
   return eq(a.right, b.right) && eq(a.left, b.left);
 }
 
-// U+2212 minus, matching the typography of the preset labels above.
-function formatSph(sph: number): string {
-  return sph < 0 ? `−${Math.abs(sph).toFixed(2)}` : sph.toFixed(2);
+// U+2212 minus and explicit + for plus lenses, as written on a real Rx.
+export function formatSph(sph: number): string {
+  if (sph < 0) return `−${Math.abs(sph).toFixed(2)}`;
+  if (sph > 0) return `+${sph.toFixed(2)}`;
+  return sph.toFixed(2);
 }
 
 /** Label for the on-screen Rx chip: a preset's chip label, else per-eye spheres. */
