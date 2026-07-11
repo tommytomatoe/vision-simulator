@@ -40,7 +40,7 @@ export function App() {
   const [webglError, setWebglError] = useState(false);
   const [rx, setRx] = useState<Prescription>(TOMMY_RX);
   const [selection, setSelection] = useState<EyeSelection>('both');
-  const [mode, setMode] = useState<RenderMode>('sharp');
+  const [mode, setMode] = useState<RenderMode>('blurred');
   const [wipe, setWipe] = useState(0.5);
   const [gain] = useState(() => parseGainParam(window.location.search) ?? DEFAULT_BLUR_GAIN);
   const [kind, setKind] = useState<SourceKind>('scene');

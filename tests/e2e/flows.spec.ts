@@ -5,10 +5,10 @@ test('renders the stage and switches correction modes', async ({ page }) => {
   await expect(page.getByTestId('stage')).toBeVisible();
   await expect(page.getByTestId('webgl-error')).toHaveCount(0);
 
-  // Default is "With glasses" (sharp).
-  await expect(page.getByRole('button', { name: /with glasses/i })).toHaveAttribute('aria-pressed', 'true');
-  await page.getByRole('button', { name: /^without$/i }).click();
+  // Default is "Without glasses" (blurred) — lead with the impaired view.
   await expect(page.getByRole('button', { name: /^without$/i })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: /with glasses/i }).click();
+  await expect(page.getByRole('button', { name: /with glasses/i })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: /compare/i }).click();
   await expect(page.getByTestId('wipe-handle')).toBeVisible();
 });
