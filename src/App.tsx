@@ -100,10 +100,20 @@ export function App() {
     };
   }, [kind]);
 
-  // warm the first photos at app load (and after each end-of-pool reshuffle)
-  // so the very first jump into photo mode doesn't pay a cold fetch
+  // Warm one photo at app load so the first jump into photos is instant, but
+  // defer the rest of the initial window to the first interaction — idle
+  // visitors who never touch the app don't download photos they'll never see.
+  // (After an end-of-pool reshuffle the navigation effect below re-warms
+  // immediately, so the interaction listener only matters pre-photo-mode.)
   useEffect(() => {
-    photoLoader.preload(photos.slice(0, 3).map((p) => p.src));
+    photoLoader.preload(photos.slice(0, 1).map((p) => p.src));
+    const warmMore = () => photoLoader.preload(photos.slice(1, 4).map((p) => p.src));
+    window.addEventListener('pointerdown', warmMore, { once: true });
+    window.addEventListener('keydown', warmMore, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', warmMore);
+      window.removeEventListener('keydown', warmMore);
+    };
   }, [photos, photoLoader]);
 
   // set the current photo as the source, then warm the next few so Next is

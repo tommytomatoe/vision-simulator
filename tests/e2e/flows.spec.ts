@@ -48,7 +48,7 @@ test('the next arrow shows on the eye chart and jumps to photos', async ({ page 
   await expect(page.getByTestId('attribution')).toContainText(/Photo by/);
 });
 
-test('preloads photos at app load and extends the warm window in photo mode', async ({ page }) => {
+test('preloads one photo at load and three more on first interaction', async ({ page }) => {
   const photoRequests = () =>
     page.evaluate(
       () =>
@@ -58,14 +58,12 @@ test('preloads photos at app load and extends the warm window in photo mode', as
     );
 
   await page.goto('/');
-  // 3 photos warm on load, before photo mode is ever opened
-  await expect.poll(photoRequests, { timeout: 10_000 }).toBeGreaterThanOrEqual(3);
+  // exactly one photo warms on load — idle visitors pay for no more
+  await expect.poll(photoRequests, { timeout: 10_000 }).toBeGreaterThanOrEqual(1);
+  expect(await photoRequests()).toBe(1);
 
-  await page.getByRole('button', { name: /^settings$/i }).click();
-  await page.getByRole('button', { name: /photos/i }).click();
-  await page.getByRole('button', { name: /^done$/i }).click();
-  await expect(page.getByTestId('attribution')).toBeVisible();
-  // showing photo[0] preloads 1–3 = at least 4 distinct photos requested
+  // any first interaction warms the next three
+  await page.getByRole('button', { name: /with glasses/i }).click();
   await expect.poll(photoRequests, { timeout: 10_000 }).toBeGreaterThanOrEqual(4);
 });
 
